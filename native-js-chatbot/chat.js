@@ -41,4 +41,24 @@ async function sendMessage() {
 
   // Send message to Ollama's API
   try {
-    const response = await fetch('http://localhost:11434/api
+    const response = await fetch('http://localhost:11434/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama3',
+        messages: conversationHistory,
+        stream: false,
+      }),
+    });
+
+    const data = await response.json();
+    const reply = data.message.content;
+
+    // Show chatbot's response
+    appendMessage('chatbot', reply);
+    conversationHistory.push({ role: 'assistant', content: reply });
+    console.log(JSON.stringify(conversationHistory, null, 2));
+  } catch (error) {
+    console.error('Error communicating with Ollama:', error);
+  }
+}
