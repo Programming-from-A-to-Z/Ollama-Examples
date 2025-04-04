@@ -3,7 +3,7 @@ let inputBox;
 let chatLog = '';
 let chatP;
 
-function setup() {
+async function setup() {
   noCanvas();
   inputBox = createInput();
   inputBox.size(300);
@@ -15,6 +15,10 @@ function setup() {
     content:
       'You are a frog that only ever says ribbit. No matter what anyone else says you only say Ribbit.',
   });
+
+  const response = await fetch('http://localhost:11434/api/tags');
+  const json = await response.json();
+  console.log(json);
 }
 
 async function sendMessage() {
@@ -22,23 +26,28 @@ async function sendMessage() {
   conversationHistory.push({ role: 'user', content: userInput });
   chatLog = `You: ${userInput}</br></br>` + chatLog;
   chatP.html(chatLog);
-  try {
-    const response = await fetch('http://localhost:11434/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'llama3',
-        messages: conversationHistory,
-        stream: false,
-      }),
-    });
-    const data = await response.json();
-    const reply = data.message.content;
-    conversationHistory.push({ role: 'assistant', content: reply });
-    chatLog = `Chatbot: ${reply}</br></br>` + chatLog;
-    chatP.html(chatLog);
-  } catch (error) {
-    console.error('Error communicating with Ollama:', error);
-    chatLog += 'Error: Unable to communicate with the chatbot\n';
-  }
+  const response = await fetch('http://localhost:11434/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      // model: 'llama3.2',
+      model: 'deepseek-r1',
+      messages: conversationHistory,
+      stream: false,
+    }),
+  });
+  const data = await response.json();
+  const reply = data.message.content;
+  conversationHistory.push({ role: 'assistant', content: reply });
+
+  // Process the response to style the thinking tags
+  console.log(reply);
+  let styledReply = reply.replace(
+    /\<think\>((\n||.)*?)\<\/think\>/gm,
+    '<span style="color: #999; font-style: italic;">&lt;think&gt;$1&lt;/think&gt;</span>'
+  );
+  styledReply = styledReply.replace(/\n/g, '<br>');
+  console.log(styledReply);
+  chatLog = `Chatbot: ${styledReply}</br></br>` + chatLog;
+  chatP.html(chatLog);
 }
