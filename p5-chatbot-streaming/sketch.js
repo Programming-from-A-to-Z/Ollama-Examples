@@ -11,6 +11,10 @@ async function setup() {
   let sendButton = createButton('Send');
   sendButton.mousePressed(sendMessage);
   chatP = createElement('div');
+
+  const response = await fetch('http://localhost:11434/api/tags');
+  const json = await response.json();
+  console.log(json);
 }
 
 async function sendMessage() {
