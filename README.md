@@ -12,3 +12,4 @@ A collection of basic examples for using [Ollama](https://ollama.com/) with clie
 - Native JS Chatbot - Browser implementation using vanilla JavaScript
 - p5 Chatbot - Simple chatbot using p5.js
 - p5 Chatbot Streaming - p5.js chatbot with streaming response
+- p5 Vision Chatbot - p5.js chatbot includes canvas as input

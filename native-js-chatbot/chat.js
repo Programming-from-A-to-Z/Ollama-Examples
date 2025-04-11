@@ -1,3 +1,6 @@
+// Machine Learning for Creative Coding
+// https://github.com/shiffman/ML-for-Creative-Coding
+
 // Get user input area
 const userInput = document.getElementById('user-input');
 
