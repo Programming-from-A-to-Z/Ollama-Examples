@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.10.0/p5.js"></script>
+    <meta charset="utf-8" />
+    <style>
+      #sketch-container {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>p5.js Code Generator</h1>
+    <div>
+      <textarea id="prompt" placeholder="Describe a p5.js sketch..." rows="3" cols="60">draw a blue circle</textarea>
+      <br>
+      <button onclick="sendMessage()">Generate</button>
+    </div>
+    <div id="sketch-container"></div>
+    <script src="sketch.js"></script>
+  </body>
+</html>

@@ -1,6 +1,22 @@
 # Ollama Examples
 
-A collection of basic examples for using [Ollama](https://ollama.com/) with client-side JavaScript.
+A collection of basic examples for using [Ollama](https://ollama.com/) with client-side JavaScript. The Express server proxies requests to Ollama. This could be done directly via p5.js but this is best to avoid CORS issues as well as a foundation for plugging in other services and cloud-based LLMs.
+
+1. Install dependencies:
+
+```
+npm install
+```
+
+2. Make sure Ollama is running on your machine (http://localhost:11434)
+
+3. Start the server:
+
+```
+npm start
+```
+
+4. Open your browser to http://localhost:3000
 
 ## Resources
 
@@ -9,7 +25,6 @@ A collection of basic examples for using [Ollama](https://ollama.com/) with clie
 
 ## Examples
 
-- Native JS Chatbot - Browser implementation using vanilla JavaScript
-- p5 Chatbot - Simple chatbot using p5.js
-- p5 Chatbot Streaming - p5.js chatbot with streaming response
-- p5 Vision Chatbot - p5.js chatbot includes canvas as input
+- **1-chat** - streaming chatbot interface
+- **2-code-generator** - generate and run p5.js sketches from text descriptions
+- **3-vision** - image description of canvas drawings
