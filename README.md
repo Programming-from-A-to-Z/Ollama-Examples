@@ -8,15 +8,26 @@ A collection of basic examples for using [Ollama](https://ollama.com/) with clie
 npm install
 ```
 
-2. Make sure Ollama is running on your machine (http://localhost:11434)
+2. Choose your LLM provider:
 
-3. Start the server:
-
+**Option A: Ollama (Local)**
+- Make sure Ollama is running on your machine (http://localhost:11434)
+- Start the server:
 ```
 npm start
 ```
 
-4. Open your browser to http://localhost:3000
+**Option B: OpenAI (Cloud)**
+- Create a `.env` file with your OpenAI API key:
+```
+OPENAI_API_KEY=your_api_key_here
+```
+- Start the OpenAI server:
+```
+npm run openai
+```
+
+3. Open your browser to http://localhost:3000
 
 ## Resources
 
