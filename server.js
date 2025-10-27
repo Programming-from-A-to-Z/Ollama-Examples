@@ -15,17 +15,27 @@ app.get('/api/tags', async (request, response) => {
 
 // Chat without streaming
 app.post('/api/chat', async (request, response) => {
+  console.log('Model:', request.body.model);
+  console.log('Messages:', request.body.messages);
+
   const ollamaResponse = await fetch('http://localhost:11434/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(request.body),
   });
+
+  console.log('Ollama response status:', ollamaResponse.status);
   const data = await ollamaResponse.json();
+  console.log('sending response');
   response.json(data);
 });
 
 // Chat with streaming
 app.post('/api/chat-streaming', async (request, response) => {
+  console.log('Streaming request');
+  console.log('Model:', request.body.model);
+  console.log('Messages:', request.body.messages);
+
   const ollamaResponse = await fetch('http://localhost:11434/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
