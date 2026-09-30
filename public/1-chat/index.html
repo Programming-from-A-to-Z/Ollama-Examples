@@ -12,7 +12,7 @@
       <textarea
         id="user-input"
         placeholder="Type your message..."
-        onkeydown="if(event.keyCode === 13 && !event.shiftKey) { sendMessage(); event.preventDefault(); }"
+        onkeydown="if(event.key === 'Enter' && !event.shiftKey) { sendMessage(); event.preventDefault(); }"
       ></textarea>
       <button onclick="sendMessage()">Send</button>
     </div>

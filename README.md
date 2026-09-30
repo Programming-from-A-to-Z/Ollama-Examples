@@ -8,7 +8,12 @@ A collection of basic examples for using [Ollama](https://ollama.com/) with clie
 npm install
 ```
 
-2. Make sure Ollama is running on your machine (http://localhost:11434)
+2. Make sure Ollama is running on your machine (http://localhost:11434) and pull the models used by the examples:
+
+```
+ollama pull gemma4
+ollama pull qwen3
+```
 
 3. Start the server:
 
@@ -21,10 +26,15 @@ npm start
 ## Resources
 
 - [Ollama](https://ollama.com/) - Run LLMs locally
-- [Ollama API Documentation](https://github.com/ollama/ollama/blob/main/docs/api.md)
+- [Ollama API Documentation](https://docs.ollama.com/api)
+  - [Chat endpoint (`/api/chat`)](https://docs.ollama.com/api/chat)
+  - [Streaming](https://docs.ollama.com/capabilities/streaming)
+  - [Vision](https://docs.ollama.com/capabilities/vision)
+  - [Thinking](https://docs.ollama.com/capabilities/thinking)
 
 ## Examples
 
-- **1-chat** - streaming chatbot interface
-- **2-code-generator** - generate and run p5.js sketches from text descriptions
-- **3-vision** - image description of canvas drawings
+- **1-chat** - streaming chatbot interface (`gemma4`)
+- **2-code-generator** - generate and run p5.js sketches from text descriptions (`gemma4`)
+- **3-vision** - image description of canvas drawings (`gemma4`)
+- **4-reasoning** - streams a reasoning model's "thinking" separately from its final answer (`qwen3`)

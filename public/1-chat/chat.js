@@ -1,5 +1,5 @@
 // Programming from A to Z
-// https://github.com/Programming-from-A-to-Z/A2Z-F25
+// https://github.com/Programming-from-A-to-Z/A2Z-F26
 
 // Get user input area
 const userInput = document.getElementById('user-input');
@@ -43,7 +43,7 @@ async function sendMessage() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'gemma3',
+      model: 'gemma4',
       messages: conversationHistory,
       stream: true,
       options: {
@@ -56,15 +56,19 @@ async function sendMessage() {
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let fullReply = '';
+  let buffer = '';
 
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
 
-    const chunk = decoder.decode(value);
-    const lines = chunk.split('\n').filter((line) => line.trim() !== '');
+    // A chunk can end partway through a line, so keep the leftover for next time
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
 
     for (const line of lines) {
+      if (line.trim() === '') continue;
       const data = JSON.parse(line);
       if (data.message && data.message.content) {
         fullReply += data.message.content;

@@ -1,5 +1,5 @@
 // Programming from A to Z
-// https://github.com/Programming-from-A-to-Z/A2Z-F25
+// https://github.com/Programming-from-A-to-Z/A2Z-F26
 
 let inputBox;
 let askButton;
@@ -38,7 +38,7 @@ async function askQuestion() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'deepseek-r1:14b',
+      model: 'qwen3',
       messages: [
         {
           role: 'system',
@@ -50,6 +50,8 @@ async function askQuestion() {
         },
       ],
       stream: true,
+      // Ask Ollama to return the reasoning separately in message.thinking
+      think: true,
       options: {
         temperature: 1.0,
       },
@@ -58,8 +60,7 @@ async function askQuestion() {
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
-  let fullText = '';
-  let insideThink = false;
+  let buffer = '';
   let thinkBuffer = '';
   let answerBuffer = '';
 
@@ -70,39 +71,24 @@ async function askQuestion() {
       break;
     }
 
-    const chunk = decoder.decode(value);
-    const lines = chunk.split('\n').filter((line) => line.trim() !== '');
+    // A chunk can end partway through a line, so keep the leftover for next time
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
 
     for (const line of lines) {
+      if (line.trim() === '') continue;
       const data = JSON.parse(line);
-      if (data.done) {
-        console.log('done');
-      }
-      if (data.message && data.message.content) {
-        const text = data.message.content;
-
-        fullText += text;
-
-        // Check for <think> opening
-        if (text.includes('<think>')) {
-          insideThink = true;
+      if (data.message) {
+        // Reasoning arrives in message.thinking, the final answer in message.content
+        if (data.message.thinking) {
+          thinkBuffer += data.message.thinking;
+          thinkingText = thinkBuffer;
         }
-
-        // Check for </think> closing BEFORE accumulating
-        if (text.includes('</think>')) {
-          thinkBuffer += text;
-          insideThink = false;
-        } else {
-          if (insideThink) {
-            thinkBuffer += text;
-          } else {
-            answerBuffer += text;
-          }
+        if (data.message.content) {
+          answerBuffer += data.message.content;
+          answerP.html(answerBuffer);
         }
-
-        // Update displays (strip tags)
-        thinkingText = thinkBuffer.replace(/<\/?think>/g, '');
-        answerP.html(answerBuffer.replace(/<\/?think>/g, ''));
       }
     }
   }
