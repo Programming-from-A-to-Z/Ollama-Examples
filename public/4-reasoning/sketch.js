@@ -1,95 +1,78 @@
 // Programming from A to Z
 // https://github.com/Programming-from-A-to-Z/A2Z-F26
 
-let inputBox;
-let askButton;
-let answerP;
-let thinkingText = '';
+// Ask the same question three ways and compare the answers
+// and how many tokens each one costs.
+
+let questionBox;
+let answerOnlyColumn;
+let stepByStepColumn;
+let thinkingColumn;
 
 function setup() {
-  createCanvas(900, 600);
-  textFont('monospace');
-  textSize(16);
+  noCanvas();
 
-  inputBox = createInput('Why is the sky blue?');
-  inputBox.size(400);
-  askButton = createButton('Ask');
-  askButton.mousePressed(askQuestion);
+  questionBox = createElement(
+    'textarea',
+    'A bat and a ball cost $1.10 in total. The bat costs $1.00 more than the ball. How much does the ball cost?'
+  );
 
-  createP('Answer:');
-  answerP = createP('...');
-  answerP.style('font-family', 'monospace');
+  let answerOnlyButton = createButton('Answer only');
+  answerOnlyButton.mousePressed(askAnswerOnly);
+  let stepByStepButton = createButton("Let's think step by step");
+  stepByStepButton.mousePressed(askStepByStep);
+  let thinkingButton = createButton('Thinking mode');
+  thinkingButton.mousePressed(askThinking);
+
+  // One column for each way of asking, below the buttons
+  createElement('br');
+  answerOnlyColumn = createDiv();
+  answerOnlyColumn.class('column');
+  stepByStepColumn = createDiv();
+  stepByStepColumn.class('column');
+  thinkingColumn = createDiv();
+  thinkingColumn.class('column');
 }
 
-function draw() {
-  background(0);
-  fill(0, 255, 0);
-  textAlign(LEFT, TOP);
-  text(thinkingText, 10, 10, width - 20, height - 40);
+// 1. Just the answer, no thinking
+function askAnswerOnly() {
+  const prompt = questionBox.value() + ' Reply with only the answer.';
+  ask('Answer only', prompt, false, answerOnlyColumn);
 }
 
-async function askQuestion() {
-  thinkingText = '';
-  answerP.html('Thinking...');
+// 2. Ask the model to show its work in the answer itself
+function askStepByStep() {
+  const prompt = questionBox.value() + " Let's think step by step.";
+  ask('Step by step', prompt, false, stepByStepColumn);
+}
 
-  const question = inputBox.value();
+// 3. Thinking mode: the model reasons first, separately from the answer
+function askThinking() {
+  ask('Thinking mode', questionBox.value(), true, thinkingColumn);
+}
 
-  const response = await fetch('/api/chat-streaming', {
+async function ask(label, prompt, think, column) {
+  column.html('<h3>' + label + '</h3><p>...</p>');
+
+  const response = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'qwen3',
-      messages: [
-        {
-          role: 'system',
-          content: 'You think like a frog and give a very brief concise answer.',
-        },
-        {
-          role: 'user',
-          content: question + ' Remember you are a frog. But do not reference being a frog in your final answer.',
-        },
-      ],
-      stream: true,
-      // Ask Ollama to return the reasoning separately in message.thinking
-      think: true,
-      options: {
-        temperature: 1.0,
-      },
+      messages: [{ role: 'user', content: prompt }],
+      think: think,
+      stream: false,
     }),
   });
+  const data = await response.json();
 
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let thinkBuffer = '';
-  let answerBuffer = '';
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      console.log('done');
-      break;
-    }
-
-    // A chunk can end partway through a line, so keep the leftover for next time
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop();
-
-    for (const line of lines) {
-      if (line.trim() === '') continue;
-      const data = JSON.parse(line);
-      if (data.message) {
-        // Reasoning arrives in message.thinking, the final answer in message.content
-        if (data.message.thinking) {
-          thinkBuffer += data.message.thinking;
-          thinkingText = thinkBuffer;
-        }
-        if (data.message.content) {
-          answerBuffer += data.message.content;
-          answerP.html(answerBuffer);
-        }
-      }
-    }
+  // eval_count is how many tokens the model generated (thinking included)
+  let html = '<h3>' + label + '</h3>';
+  html += '<p><b>Tokens: ' + data.eval_count + '</b></p>';
+  if (data.message.thinking) {
+    html += '<div class="thinking">' + marked.parse(data.message.thinking) + '</div>';
   }
+  // The model writes in markdown, so turn it into HTML (like ChatGPT does)
+  html += marked.parse(data.message.content);
+  column.html(html);
 }

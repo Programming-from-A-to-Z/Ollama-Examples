@@ -52,30 +52,13 @@ async function sendMessage() {
     }),
   });
 
-  // Process the streaming response
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
+  // Read the reply as text, piece by piece, as it arrives
+  const textStream = response.body.pipeThrough(new TextDecoderStream());
   let fullReply = '';
-  let buffer = '';
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    // A chunk can end partway through a line, so keep the leftover for next time
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop();
-
-    for (const line of lines) {
-      if (line.trim() === '') continue;
-      const data = JSON.parse(line);
-      if (data.message && data.message.content) {
-        fullReply += data.message.content;
-        botMessage.textContent = fullReply;
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      }
-    }
+  for await (const text of textStream) {
+    fullReply += text;
+    botMessage.textContent = fullReply;
+    chatContainer.scrollTop = chatContainer.scrollHeight;
   }
 
   conversationHistory.push({ role: 'assistant', content: fullReply });

@@ -1,4 +1,5 @@
 import express from 'express';
+import ollama from 'ollama';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -6,28 +7,14 @@ const port = process.env.PORT || 3000;
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static('public'));
 
-// Get available models
-app.get('/api/tags', async (request, response) => {
-  const ollamaResponse = await fetch('http://localhost:11434/api/tags');
-  const data = await ollamaResponse.json();
-  response.json(data);
-});
-
 // Chat without streaming
 app.post('/api/chat', async (request, response) => {
   console.log('Model:', request.body.model);
   console.log('Messages:', request.body.messages);
 
-  const ollamaResponse = await fetch('http://localhost:11434/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request.body),
-  });
-
-  console.log('Ollama response status:', ollamaResponse.status);
-  const data = await ollamaResponse.json();
-  console.log('sending response');
-  response.json(data);
+  // The browser sends everything Ollama needs (model, messages, stream: false, etc.)
+  const reply = await ollama.chat(request.body);
+  response.json(reply);
 });
 
 // Chat with streaming
@@ -36,22 +23,33 @@ app.post('/api/chat-streaming', async (request, response) => {
   console.log('Model:', request.body.model);
   console.log('Messages:', request.body.messages);
 
-  const ollamaResponse = await fetch('http://localhost:11434/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(request.body),
-  });
+  // The browser sends stream: true, so this returns the reply in parts
+  const stream = await ollama.chat(request.body);
+
+  // Send the text of each part to the browser as soon as it arrives
   response.setHeader('Content-Type', 'text/plain');
-  ollamaResponse.body.pipeTo(
-    new WritableStream({
-      write(chunk) {
-        response.write(chunk);
-      },
-      close() {
-        response.end();
-      },
-    })
-  );
+  for await (const part of stream) {
+    response.write(part.message.content);
+  }
+  response.end();
+});
+
+// Complete a prompt (no chat messages, just text in and text out)
+app.post('/api/generate', async (request, response) => {
+  console.log('Model:', request.body.model);
+  console.log('Prompt:', request.body.prompt);
+
+  const reply = await ollama.generate(request.body);
+  response.json(reply);
+});
+
+// Decision ("System One") model: answers typed questions with probabilities
+app.post('/api/systemone', async (request, response) => {
+  console.log('Model:', request.body.model);
+  console.log('State:', request.body.state);
+
+  const result = await ollama.systemone(request.body);
+  response.json(result);
 });
 
 app.listen(port, serverReady);
